@@ -39,7 +39,7 @@ class _SignInState extends State<SignIn> {
                   children: [
                     const Expanded(child: SizedBox()),
                     const Text(
-                      'Учет финансов',
+                      'Учет пользователей',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 26),
                     ),

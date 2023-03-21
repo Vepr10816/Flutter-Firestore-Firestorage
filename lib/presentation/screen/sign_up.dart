@@ -67,7 +67,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextFormField(
+                /*TextFormField(
                   maxLength: 16,
                   controller: _loginController,
                   validator: (value) {
@@ -87,7 +87,7 @@ class _SignUpState extends State<SignUp> {
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 20),*/
                 TextFormField(
                   maxLength: 8,
                   controller: _passwordController,
