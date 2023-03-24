@@ -25,8 +25,9 @@ class _MainScreenState extends State<MainScreen> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   final Stream<QuerySnapshot> _usersStream =
-      FirebaseFirestore.instance.collection('user').snapshots();
+      FirebaseFirestore.instance.collection('photos').snapshots();
   int counter = 0;
+  late String idUser = '';
 
   void _incrementCounter() async{
     final result = await FilePicker.platform.pickFiles(
@@ -35,18 +36,36 @@ class _MainScreenState extends State<MainScreen> {
     );
 
     if(result != null){
-      //final size = result.files.first.size;
       Uint8List? file = result.files.single.bytes;
-      //final fileExtensions = result.files.first.extension!;
-      //print("размер:$size file:${file.path} fileExtensions:${fileExtensions}");
+      final fileName = result.files.first.name;
+      final fileSize = result.files.first.size;
+      String fileUrl = '${DateTime.now()}.png';
 
-      //final f = FirebaseStorage.instance.ref().child(getRandomString(5)).putFile(file);
-      Reference ref = FirebaseStorage.instance.ref().child('${DateTime.now()}.png');
+      final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+
+      Reference ref = FirebaseStorage.instance.ref().child(fileUrl);
+      
       UploadTask uploadTask = ref.putData(file!, SettableMetadata(contentType: 'image/png'));
       TaskSnapshot taskSnapshot = await uploadTask
         .whenComplete(() => print('done'))
           .catchError((error) => print('something went wrong'));
       String url = await taskSnapshot.ref.getDownloadURL();
+
+      await fireStore
+          .collection('photos')
+          .add(
+            {
+              'user': idUser,
+              'fileUrlName': fileUrl,
+              'fileName': fileName,
+              'fileSize': fileSize,
+              'fileUrl': url
+            },
+          )
+          .then((value) => ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text("Photo Added"))))
+          .catchError((error) => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Failed to add photo: $error"))));
     }
     else{
       
@@ -91,8 +110,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = (ModalRoute.of(context)?.settings.arguments ??
+          <String, dynamic>{}) as Map;
+    idUser = arguments['idUser'].toString();
+
     return Scaffold(
-      appBar: AppBar(
+      /*appBar: AppBar(
          title: const Text('title'),
         actions: <Widget>[
           ElevatedButton(
@@ -153,7 +176,7 @@ class _MainScreenState extends State<MainScreen> {
           onPressed: _incrementCounter,
           tooltip: 'Increment',
           child: const Icon(Icons.add),
-        ),
+        ),*/
 
 
 
@@ -172,70 +195,112 @@ class _MainScreenState extends State<MainScreen> {
 
 
 
-      /*appBar: AppBar(
-        title: const Text('Пользователи'),
+      appBar: AppBar(
+        title: const Text('Фотки пользователя'),
         actions: <Widget>[
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                showAddScreen();
-              });
-            },
+            onPressed: _incrementCounter,
             child: const Text("Добавить")),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _usersStream,
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return const Text('Something went wrong');
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('photos').where('user', isEqualTo: idUser).snapshots(),
+              builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError) {
+                  return const Text('Something went wrong');
+                }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("Loading");
-          }
-          return
-              ListView(
-                padding: const EdgeInsets.all(8),
-                children: snapshot.data!.docs
-                    .map((DocumentSnapshot document) {
-                      Map<String, dynamic> data =
-                          document.data() as Map<String, dynamic>;
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                IconButton(
-                                  onPressed: () async {
-                                      deleteUser(document.id);
-                                  },
-                                  icon: Icon(Icons.delete),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      showUpdateScreen(data['email'], document.id );
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text("Loading");
+                }
+                return
+                    ListView(
+                      padding: const EdgeInsets.all(8),
+                      children: snapshot.data!.docs
+                          .map((DocumentSnapshot document) {
+                            Map<String, dynamic> data =
+                                document.data() as Map<String, dynamic>;
+                            return /*Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      IconButton(
+                                        onPressed: () async {
+                                            deleteUser(document.id);
+                                        },
+                                        icon: Icon(Icons.delete),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            showUpdateScreen(data['email'], document.id );
+                                          });
+                                        },
+                                        icon: Icon(Icons.edit),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child:
+                                            Text(data['email'])
+                                      ),
+                                    ]
+
+                            );*/
+
+                          Card(
+                          child: InkWell(
+                            onLongPress: () async{
+                              link = '';
+                              await FirebaseStorage.instance.ref("/" + data['fileUrlName']!).delete().then((value) async => 
+                              await FirebaseFirestore.instance
+                              .collection('photos').doc(document.id)
+                              .delete());
+                            },
+                            onTap: () {
+                              setState(() {
+                                setState(() {
+                                      showPhotoScreen(data['fileUrl']);
                                     });
-                                  },
-                                  icon: Icon(Icons.edit),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child:
-                                      Text(data['email'])
-                                ),
-                              ]
-
-                      );
-                      
-                      /*ListTile(
-                        title: Text(data['email'])
-                      );*/
-                    })
-                    .toList()
-                    .cast(),
-              );
-        },
-      ),*/
+                              });
+                            },
+                            child: ListTile(
+                              title: Text('${data['fileName']}: ${data['fileSize']} МБ ${data['fileUrl']}'),
+                            )
+                            /*Image.network(
+              fullpath[index].url!,
+              width: 200,
+              height: 200,
+              //fit: BoxFit.cover,
+            ),*/
+                          ),
+                        );
+                            
+                            /*ListTile(
+                              title: Text(data['email'])
+                            );*/
+                          })
+                          .toList()
+                          .cast(),
+                    );
+                    
+              },
+              
+            ),
+          ),
+          /*Expanded(child: 
+          Image.network(
+                link,
+                errorBuilder: (context, error, stackTrace){
+                  return Text('Ошибка');
+                },
+              ),
+          ),*/
+        ],
+      ),
+      
+      
     );
   }
 
@@ -301,7 +366,6 @@ class _MainScreenState extends State<MainScreen> {
 
   void addUser() async {
     final FirebaseFirestore fireStore = FirebaseFirestore.instance;
-    final auth = FirebaseAuth.instance;
       await fireStore
           .collection('user')
           .add(
@@ -339,6 +403,32 @@ class _MainScreenState extends State<MainScreen> {
               .showSnackBar(SnackBar(content: Text("User Delete"))))
           .catchError((error) => ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("Failed to delete user: $error"))));
+  }
+
+
+  void showPhotoScreen(String fileUrl) async {
+    _emailController.text ='';
+                showDialog(
+      context: context,
+      builder: (context) => gradeDialog2(fileUrl),
+    );
+  }
+
+  StatefulBuilder gradeDialog2(String fileUrl) {
+    return StatefulBuilder(
+      builder: (context, _setter) {
+        return SimpleDialog(
+          children: [
+            Image.network(
+                fileUrl,
+                errorBuilder: (context, error, stackTrace){
+                  return Text('Ошибка');
+                },
+              )
+          ],
+        );
+      },
+    );
   }
 
   

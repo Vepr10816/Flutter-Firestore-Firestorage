@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'main_screen.dart';
 
-
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
   static const routeName = '/signin';
@@ -34,116 +33,113 @@ class _SignInState extends State<SignIn> {
           padding: const EdgeInsets.all(20),
           child: Form(
             key: _key,
-            child:  Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Expanded(child: SizedBox()),
-                    const Text(
-                      'Учет пользователей',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Expanded(child: SizedBox()),
+                const Text(
+                  'Учет пользователей',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 26),
+                ),
+                const Expanded(child: SizedBox()),
+                TextFormField(
+                  controller: _loginController,
+                  validator: (value) {
+                    if (!_isValid) {
+                      return null;
+                    }
+                    if (value!.isEmpty) {
+                      return 'Поле логин пустое';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Логин',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _passwordController,
+                  validator: (value) {
+                    if (!_isValid) {
+                      return null;
+                    }
+                    if (value!.isEmpty) {
+                      return 'Поле пароль пустое';
+                    }
+                    return null;
+                  },
+                  obscureText: isObscure,
+                  decoration: InputDecoration(
+                    labelText: 'Пароль',
+                    suffixIcon: TextFieldObscure(isObscure: (value) {
+                      setState(() {
+                        isObscure = value;
+                      });
+                    }),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  content: 'Войти',
+                  onPressed: () {
+                    _isValid = true;
+                    if (_key.currentState!.validate()) {
+                      signIn();
+                    } else {}
+                  },
+                ),
+                const Expanded(flex: 3, child: SizedBox()),
+                InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () {
+                    _loginController.clear();
+                    _passwordController.clear();
+                    _isValid = false;
+                    _key.currentState!.validate();
+                    Navigator.pushNamed(context, SignUp.routeName);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: Text(
+                      'Регистрация в системе',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 26),
+                      style: TextStyle(fontSize: 20),
                     ),
-                    const Expanded(child: SizedBox()),
-                    TextFormField(
-                      controller: _loginController,
-                      validator: (value) {
-                        if (!_isValid) {
-                          return null;
-                        }
-                        if (value!.isEmpty) {
-                          return 'Поле логин пустое';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                        labelText: 'Логин',
-                        border: OutlineInputBorder(),
-                      ),
+                  ),
+                ),
+                InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () {
+                    _loginController.clear();
+                    _passwordController.clear();
+                    _isValid = false;
+                    _key.currentState!.validate();
+                    FirebaseAuth.instance.signInAnonymously();
+                    Navigator.pushNamed(context, MainScreen.routeName,
+                        arguments: {'idUser': 'fdjkrf'});
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: Text(
+                      'Зайти просто так',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 20),
                     ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _passwordController,
-                      validator: (value) {
-                        if (!_isValid) {
-                          return null;
-                        }
-                        if (value!.isEmpty) {
-                          return 'Поле пароль пустое';
-                        }
-                        return null;
-                      },
-                      obscureText: isObscure,
-                      decoration: InputDecoration(
-                        labelText: 'Пароль',
-                        suffixIcon: TextFieldObscure(isObscure: (value) {
-                          setState(() {
-                            isObscure = value;
-                          });
-                        }),
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    CustomButton(
-                      content: 'Войти',
-                      onPressed: () {
-                        _isValid = true;
-                        if (_key.currentState!.validate()) {
-                          signIn();
-                        } else {}
-                      },
-                    ),
-                    const Expanded(flex: 3, child: SizedBox()),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () {
-                        _loginController.clear();
-                        _passwordController.clear();
-                        _isValid = false;
-                        _key.currentState!.validate();
-                        Navigator.pushNamed(context, SignUp.routeName);
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Text(
-                          'Регистрация в системе',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ),
-                      
-                    ),
-
-                    InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () {
-                        _loginController.clear();
-                        _passwordController.clear();
-                        _isValid = false;
-                        _key.currentState!.validate();
-                        FirebaseAuth.instance.signInAnonymously();
-                        Navigator.pushNamed(context, MainScreen.routeName);
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Text(
-                          'Зайти просто так',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ),
-                      
-                    ),
-                    
-                  ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
- 
- String email = '';
+
+  String email = '';
   void signIn() async {
     final auth = FirebaseAuth.instance;
     //FirebaseAuth.instance.signInWithEmailAndPassword(email: _loginController.text, password: _passwordController.text);
@@ -153,17 +149,18 @@ class _SignInState extends State<SignIn> {
         email: _loginController.text,
         password: _passwordController.text,
       );
-      Navigator.pushNamed(context, MainScreen.routeName);
+      Navigator.pushNamed(context, MainScreen.routeName,
+          arguments: {'idUser': userCredential.user!.uid});
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found')
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Пользователь не найден')));
       else if (e.code == 'wrong-password')
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Не правильный пароль')));
-    }catch(e){
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Не правильный пароль')));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 }

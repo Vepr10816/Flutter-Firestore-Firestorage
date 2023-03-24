@@ -162,7 +162,8 @@ class _SignUpState extends State<SignUp> {
               .showSnackBar(SnackBar(content: Text("User Added"))))
           .catchError((error) => ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("Failed to add user: $error"))));
-      Navigator.pushNamed(context, MainScreen.routeName);
+      Navigator.pushNamed(context, MainScreen.routeName,
+          arguments: {'idUser': userCredential.user!.uid});
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password')
         ScaffoldMessenger.of(context)
